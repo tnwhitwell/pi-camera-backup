@@ -9,15 +9,16 @@ RUN apt-get -y update \
 
 WORKDIR /app
 
-ADD Pipfile Pipfile.lock /app/
+ADD requirements.txt /app/
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-RUN pip3 install pipenv
-RUN ln -s /usr/bin/python3 /usr/bin/python \
-    && ln -s /usr/bin/pip3 /usr/bin/pip
-# RUN pipenv install --ignore-pipfile
+RUN pip3 install -r requirements.txt
+
+RUN wget -qO- https://glare.now.sh/filebrowser/filebrowser/armv7 |\
+    tar -C /usr/bin/ -xzf - filebrowser \
+    && chmod +x /usr/bin/filebrowser
 
 RUN mkdir /mnt/source /mnt/dest \
     && touch /mnt/source/ABEDF0E7-ECDC-4858-B86E-F4D0E43DED21 \

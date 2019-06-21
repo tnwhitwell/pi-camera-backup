@@ -1,0 +1,7 @@
+{
+  "port": 8080,
+  "address": "0.0.0.0",
+  "log": "stdout",
+  "database": "/opt/filebrowser/filebrowser.db",
+  "root": "/mnt"
+}
