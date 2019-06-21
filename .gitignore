@@ -3,5 +3,4 @@ env
 .envrc
 .dockerignore
 .git
-Dockerfile
 **/__pycache__
