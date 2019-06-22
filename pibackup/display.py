@@ -25,3 +25,33 @@ class DisplayManager:
             }
         ]
         return data
+
+    def getDisks(self):
+        pass
+
+    def getBackupData(self):
+        data = {
+            "meta": {
+                "headers": [
+                    {
+                        "name": "Name",
+                        "key": "name"
+                    },
+                    {
+                        "name": "File Count",
+                        "key": "file_count",
+                        "numeric": True
+                    },
+                    {
+                        "name": "Source Checksum",
+                        "key": "source_hash"
+                    },
+                    {
+                        "name": "Backup Checksum",
+                        "key": "backup_hash"
+                    }
+                ]
+            },
+            "data": self.dirmanager.get_backups()
+        }
+        return data

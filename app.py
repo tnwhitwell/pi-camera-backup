@@ -12,21 +12,30 @@ from pibackup import configuration, directory, backup, display
 
 executor = ThreadPoolExecutor(2)
 
+config = configuration.ConfigManager()
+directory_manager = directory.DirManager(config)
+backup_manager = backup.BackupManager(config, directory_manager)
+display_manager = display.DisplayManager(config, directory_manager)
+
+
+
 app = Flask(__name__)
 
-config = configuration.ConfigManager()
-dirmanager = directory.DirManager(config)
-backup_manager = backup.BackupManager(config, dirmanager)
-display_manager = display.DisplayManager(config, dirmanager)
-
-
-
 @app.route('/')
-def hello_world():
-    return render_template('index.html')
+def home():
+    vars = {
+        "filebrowser_base": "{}://{}:{}".format(
+            request.scheme, urlparse(request.base_url).hostname,
+            config.filebrowser_port),
+    }
+    return render_template('home.html', **vars)
+
+@app.route('/backup')
+def backup():
+    return render_template('backup.html')
 
 
-@app.route('/backup', methods=['GET', 'POST'])
+@app.route('/api/backup', methods=['GET', 'POST'])
 def run_backup():
     if backup_manager.current_job is not None:
         if request.method == 'POST':
@@ -46,7 +55,7 @@ def redir_to_filebrowser():
         config.filebrowser_port
     ), http.HTTPStatus.MOVED_PERMANENTLY)
 
-@app.route('/shutdown', methods=["POST"])
+@app.route('/api/shutdown', methods=["POST"])
 def shutdown_pi():
     shutdown = subprocess.run(
         ["systemctl", "poweroff"],
@@ -66,3 +75,21 @@ def shutdown_pi():
 def chart_data():
     data = display_manager.getChartData()
     return jsonify(data), http.HTTPStatus.OK
+
+@app.route('/api/backups', methods=["GET"])
+def backup_list():
+    data = display_manager.getBackupData()
+    return jsonify(data), http.HTTPStatus.OK
+
+
+@app.route('/api/config/<conf_name>', methods=["GET"])
+def get_config(conf_name):
+    if conf_name == 'config':
+        data = dict(config)
+    elif conf_name == 'directories':
+        data = dict(directory_manager)
+    try:
+        print(data)
+        return jsonify(data), http.HTTPStatus.OK
+    except UnboundLocalError:
+        return jsonify({}), http.HTTPStatus.NOT_FOUND

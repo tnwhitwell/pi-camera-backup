@@ -1,7 +1,8 @@
 import datetime
 import pathlib
+import uuid
+import json
 
-from time import sleep
 
 from pibackup import configuration, directory, exceptions
 
@@ -10,6 +11,7 @@ class Job:
     start_time = None  # type: datetime.datetime
     destination = None  # type: pathlib.Path
     source_hash = None  # type: str
+    destination_hash = None  # type: str
 
     def run_time(self):
         now = datetime.datetime.now()
@@ -19,6 +21,16 @@ class Job:
         return("{}:{}:{}".format(
             hours, minutes, seconds
         ))
+
+    def meta(self):
+        print(list(self.destination.glob("**/*")))
+        return {
+            "source_hash": self.source_hash,
+            "backup_hash": self.destination_hash,
+            "file_count": len(
+                list(self.destination.rglob("*"))) - 1
+        }
+
 
 
 class BackupManager:
@@ -39,7 +51,9 @@ class BackupManager:
         self.current_job = j
 
         print("{} => {}".format(self.dirmanager.source_base, self.current_job.destination))
-        directory.copy_files(self.dirmanager.source_base, j)
-        sleep(10)
+        self.dirmanager.copy_files(self.dirmanager.source_base, j)
+        meta_file = j.destination / ".meta_{}".format(uuid.uuid4())
+        job_metadata = j.meta()
+        meta_file.write_text(json.dumps(job_metadata))
         print("backup done")
         self.current_job = None

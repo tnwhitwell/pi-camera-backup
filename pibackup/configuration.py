@@ -1,5 +1,8 @@
 import json
-class ConfigManager:
+import os
+from collections.abc import Mapping
+
+class ConfigManager(Mapping):
     mount_basedir = "/mnt/"
     source_identifier = "ABEDF0E7-ECDC-4858-B86E-F4D0E43DED21"
     dest_identifier = "70212024-D341-4D10-A258-1B8C1A73EC26"
@@ -11,17 +14,23 @@ class ConfigManager:
             filebrowser_config = json.load(f)
             self.filebrowser_port = filebrowser_config["port"]
 
-        with open("pibackup.json", 'r') as f:
-            file_cfg = json.load(f)
-            self.mount_basedir = file_cfg["mount_basedir"]
-            self.source_identifier = file_cfg["source_identifier"]
-            self.dest_identifier = file_cfg["destination_identifier"]
-            self.backup_dir_name_prefix = file_cfg["backup_directory_name_prefix"]
+        self.mount_basedir = os.getenv("MOUNT_BASEDIR", self.mount_basedir)
+        self.source_identifier = os.getenv("SOURCE_IDENTIFIER", self.source_identifier)
+        self.dest_identifier = os.getenv("DESTINATION_IDENTIFIER", self.dest_identifier)
+        self.backup_dir_name_prefix = os.getenv("BACKUP_DIR_PREFIX", self.backup_dir_name_prefix)
 
-
-    def __repr__(self):
-        return str({
+        self._storage = {
             "mount_basedir": self.mount_basedir,
             "source_identifier": self.source_identifier,
-            "dest_identifier": self.dest_identifier
-        })
+            "dest_identifier": self.dest_identifier,
+            "backup_dir_name_prefix": self.backup_dir_name_prefix
+        }
+
+    def __getitem__(self, key):
+        return self._storage[key]
+
+    def __iter__(self):
+        return iter(self._storage)
+
+    def __len__(self):
+        return len(self._storage)
