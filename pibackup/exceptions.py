@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pibackup
 
 class BackupManagerException(Exception):
     """Base class for other BackupManager Exceptions"""
@@ -8,6 +7,7 @@ class BackupManagerException(Exception):
         if msg is None:
             msg = "An error occurred in BackupManager"
         super(BackupManagerException, self).__init__(msg)
+
 
 class BackupAlreadyRunningError(BackupManagerException):
     """Raised when the backup is already running"""
@@ -23,6 +23,7 @@ class BackupAlreadyRunningError(BackupManagerException):
                 )
             )
         )
+
 
 class BackupChecksumFailedError(BackupManagerException):
     """Raised when the hash of source and dest differ after copying"""

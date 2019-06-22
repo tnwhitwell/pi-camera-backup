@@ -1,18 +1,14 @@
 import pathlib
 import re
 import shutil
+import os
 
-from pibackup import configuration
+from checksumdir import dirhash
+
+from pibackup import backup
 
 
-# class Directory():
-#     path = None
-#     dir_hash = None
-
-#     def __repr__(self):
-#         return str(self.path)
-
-class DirManager():
+class DirManager:
     source_base = None
     dest_base = None
     dest_dir = None
@@ -44,53 +40,29 @@ class DirManager():
 
         return nd
 
+    def compare(self, job: backup.Job):
+
+        destination_hash = dirhash(str(job.destination), 'sha1', excluded_files=self.config.source_identifier)
+        if job.source_hash == destination_hash:
+            return True
+        else:
+            return False
+
     def __repr__(self):
         return str({
             "source_drive": str(self.source_base),
             "destination_drive": str(self.dest_base)
         })
 
-def copy_files(source: pathlib.Path, dest: pathlib.Path):
-    shutil.copytree(
-        str(source), str(dest),
+
+def copy_files(source: pathlib.Path, job: backup.Job):
+    copied = shutil.copytree(
+        str(source), str(job.destination),
         ignore=shutil.ignore_patterns())
+    return copied
 
-
-def get_hash_of_dirs(directory: pathlib.Path, ignore: str = None):
-    import os
-    import hashlib
-    SHAhash = hashlib.sha1()
-    if not directory.exists():
-        return None
-
-    try:
-        for root, dirs, files in os.walk(str(directory)):
-            for names in files:
-                if ignore is not None:
-                    if names == ignore:
-                        continue
-                    else:
-                        print(names)
-                filepath = os.path.join(root, names)
-                try:
-                    f1 = open(filepath, 'rb')
-                except:
-                    # You can't open the file for some reason
-                    f1.close()
-                    continue
-
-                while True:
-                    # Read file in as little chunks
-                    buf = f1.read(4096)
-                    if not buf:
-                        break
-                    SHAhash.update(hashlib.sha1(buf).hexdigest())
-                    f1.close()
-
-    except:
-        import traceback
-        # Print the stack traceback
-        traceback.print_exc()
-        return None
-
-    return SHAhash.hexdigest()
+def disk_space(path: pathlib.Path):
+    statvfs = os.statvfs(str(path))
+    total = statvfs.f_frsize * statvfs.f_blocks
+    free = statvfs.f_frsize * statvfs.f_bavail
+    return [total - free, free]

@@ -1,28 +1,45 @@
 import datetime
-from checksumdir import dirhash
+import pathlib
+
+from time import sleep
 
 from pibackup import configuration, directory, exceptions
 
-class BackupManager():
-    start_time = None
-    config = None
-    dirmanager = None
 
-    def __init__(self, conf: configuration.ConfigManager, dmgr: directory.DirManager):
+class Job:
+    start_time = None  # type: datetime.datetime
+    destination = None  # type: pathlib.Path
+    source_hash = None  # type: str
+
+    def run_time(self):
+        now = datetime.datetime.now()
+        run_time = now - self.start_time
+        hours, remainder = divmod(run_time.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return("{}:{}:{}".format(
+            hours, minutes, seconds
+        ))
+
+
+class BackupManager:
+    current_job = None  # type: Job
+    config = None  # type: configuration.Config
+    dirmanager = None  # type: directory.DirManager
+
+    def __init__(self, conf: configuration.ConfigManager, dmgr):
         self.config = conf
         self.dirmanager = dmgr
 
     def do_backup(self):
-        if self.start_time is not None:
-            raise exceptions.BackupAlreadyRunningError(self.start_time)
-        self.start_time = datetime.datetime.now()
+        if self.current_job is not None:
+            raise exceptions.BackupAlreadyRunningError(self.current_job.start_time)
+        j = Job()
+        j.start_time = datetime.datetime.now()
+        j.destination = self.dirmanager.next_backup_dir()
+        self.current_job = j
 
-        destination = self.dirmanager.next_backup_dir()
-        print("{} => {}".format(self.dirmanager.source_base, destination))
-        source_hash = dirhash(str(self.dirmanager.source_base), 'sha1', excluded_files=self.config.source_identifier)
-        directory.copy_files(self.dirmanager.source_base, destination)
-        destination_hash = dirhash(str(destination), 'sha1', excluded_files=self.config.source_identifier)
-        if source_hash == destination_hash:
-            return True
-        else:
-            raise exceptions.BackupChecksumFailedError(source_hash, destination_hash)
+        print("{} => {}".format(self.dirmanager.source_base, self.current_job.destination))
+        directory.copy_files(self.dirmanager.source_base, j)
+        sleep(10)
+        print("backup done")
+        self.current_job = None
