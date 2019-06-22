@@ -16,6 +16,10 @@ $(document).ready(function () {
         console.log(msg);
         trigger_snackbar({message: "Backup Started"});
     });
+    socket.on('backup already running', function (msg) {
+        console.log(msg);
+        trigger_snackbar({message: "Backup already running"});
+    });
     socket.on('backup complete', function (msg) {
         console.log(msg);
         let dirname = msg["destination"].split('/').last();

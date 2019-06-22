@@ -39,6 +39,15 @@ def backup():
     }
     return render_template('backup.html', **vars)
 
+@app.route('/configure')
+def configure():
+    vars = {
+        "filebrowser_base": "{}://{}:{}".format(
+            request.scheme, urlparse(request.base_url).hostname,
+            config.filebrowser_port),
+    }
+    return render_template('config.html', **vars)
+
 
 @app.route('/api/backup', methods=['GET', 'POST'])
 def run_backup():
@@ -90,6 +99,11 @@ def backup_list():
     data = display_manager.getBackupData()
     return jsonify(data), http.HTTPStatus.OK
 
+@app.route('/api/potential_disks', methods=["GET"])
+def potential_disks():
+    data = display_manager.get_potential_disks()
+    return jsonify(data), http.HTTPStatus.OK
+
 
 @app.route('/api/config/<conf_name>', methods=["GET"])
 def get_config(conf_name):
@@ -105,4 +119,4 @@ def get_config(conf_name):
 
 
 if __name__ == "__main__":
-    socketio.run(app)
+    socketio.run(app, host='0.0.0.0')

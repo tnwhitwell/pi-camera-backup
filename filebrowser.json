@@ -3,5 +3,5 @@
   "address": "0.0.0.0",
   "log": "stdout",
   "database": "/opt/filebrowser/filebrowser.db",
-  "root": "/mnt"
+  "root": "/media"
 }

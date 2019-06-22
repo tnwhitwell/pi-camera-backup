@@ -26,8 +26,8 @@ class DisplayManager:
         ]
         return data
 
-    def getDisks(self):
-        pass
+    def get_potential_disks(self):
+        return {"data": self.dirmanager.get_disks()}
 
     def getBackupData(self):
         data = {

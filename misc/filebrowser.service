@@ -1,0 +1,11 @@
+[Unit]
+Description=File browser: %I
+After=network.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/usr/bin/filebrowser -c /opt/pibackup/filebrowser.json
+
+[Install]
+WantedBy=multi-user.target

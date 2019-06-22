@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Backup{% endblock %}
+{% block main %}
+    <div class="mdl-grid demo-content">
+        <div class="backup-controls mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
+            <button id="trigger_backup" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                Do a Backup
+            </button>
+        </div>
+    </div>
+{% endblock %}
+{% block foot_js %}
+    <script src="{{ url_for('static', filename='js/backup.js') }}"></script>
+{% endblock %}

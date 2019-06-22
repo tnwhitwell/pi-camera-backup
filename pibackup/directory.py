@@ -43,7 +43,7 @@ class DirManager(Mapping):
         else:
             return pathlib.Path(dir_list[0]).parent
 
-    def get_disks(self, identifier: str):
+    def get_disks(self):
         base_dir = pathlib.Path(self.config.mount_basedir)
         dir_list = [d.name for d in base_dir.glob("*")]
         return dir_list

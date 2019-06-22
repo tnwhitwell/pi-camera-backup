@@ -60,6 +60,7 @@ class BackupManager:
 
     def do_backup(self):
         if self.current_job is not None:
+            self.config.socketio.emit("backup already running", self.current_job.serialise())
             raise exceptions.BackupAlreadyRunningError(self.current_job.start_time)
         j = Job()
         j.start_time = datetime.datetime.now()
