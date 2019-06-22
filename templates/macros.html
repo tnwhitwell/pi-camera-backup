@@ -1,0 +1,9 @@
+{% macro nav_link(endpoint, icon, name) %}
+    {% if request.endpoint.endswith(endpoint) %}
+        <a class="mdl-navigation__link is-active" href="{{ url_for(endpoint) }}"><i
+                class="mdl-color-text--blue-grey-400 material-icons" role="presentation">{{ icon }}</i>{{ name }}</a>
+    {% else %}
+        <a class="mdl-navigation__link" href="{{ url_for(endpoint) }}"><i
+                class="mdl-color-text--blue-grey-400 material-icons" role="presentation">{{ icon }}</i>{{ name }}</a>
+    {% endif %}
+{% endmacro %}

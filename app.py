@@ -2,24 +2,23 @@ import http
 import subprocess
 
 from flask import Flask, request, redirect, render_template, jsonify
+from flask_socketio import SocketIO, emit
 from urllib.parse import urlparse
-
 
 from concurrent.futures import ThreadPoolExecutor
 
 from pibackup import configuration, directory, backup, display
 
-
 executor = ThreadPoolExecutor(2)
 
-config = configuration.ConfigManager()
+app = Flask(__name__)
+socketio = SocketIO(app)
+
+config = configuration.ConfigManager(socketio)
 directory_manager = directory.DirManager(config)
 backup_manager = backup.BackupManager(config, directory_manager)
 display_manager = display.DisplayManager(config, directory_manager)
 
-
-
-app = Flask(__name__)
 
 @app.route('/')
 def home():
@@ -30,9 +29,15 @@ def home():
     }
     return render_template('home.html', **vars)
 
+
 @app.route('/backup')
 def backup():
-    return render_template('backup.html')
+    vars = {
+        "filebrowser_base": "{}://{}:{}".format(
+            request.scheme, urlparse(request.base_url).hostname,
+            config.filebrowser_port),
+    }
+    return render_template('backup.html', **vars)
 
 
 @app.route('/api/backup', methods=['GET', 'POST'])
@@ -48,12 +53,14 @@ def run_backup():
     executor.submit(backup_manager.do_backup)
     return "Backup started", http.HTTPStatus.CREATED
 
+
 @app.route('/filebrowser')
 def redir_to_filebrowser():
     return redirect("{}://{}:{}".format(
         request.scheme, urlparse(request.base_url).hostname,
         config.filebrowser_port
     ), http.HTTPStatus.MOVED_PERMANENTLY)
+
 
 @app.route('/api/shutdown', methods=["POST"])
 def shutdown_pi():
@@ -71,10 +78,12 @@ def shutdown_pi():
     resp.mimetype = 'application/json'
     return resp
 
+
 @app.route('/api/chartdata', methods=["GET"])
 def chart_data():
     data = display_manager.getChartData()
     return jsonify(data), http.HTTPStatus.OK
+
 
 @app.route('/api/backups', methods=["GET"])
 def backup_list():
@@ -93,3 +102,7 @@ def get_config(conf_name):
         return jsonify(data), http.HTTPStatus.OK
     except UnboundLocalError:
         return jsonify({}), http.HTTPStatus.NOT_FOUND
+
+
+if __name__ == "__main__":
+    socketio.run(app)

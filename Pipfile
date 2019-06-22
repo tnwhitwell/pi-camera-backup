@@ -10,6 +10,7 @@ pylint = "*"
 [packages]
 flask = "*"
 checksumdir = "*"
+flask-socketio = "*"
 
 [requires]
 python_version = "3.5"

@@ -1,0 +1,87 @@
+{% from "macros.html" import nav_link with context %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="A front-end template that helps you build fast, modern mobile web apps.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>{% block title %}{% endblock %} - pibackup</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="images/android-desktop.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="images/ios-desktop.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <!--
+    <link rel="canonical" href="http://www.example.com/">
+    -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/roboto.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts/iconfont/material-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/material.cyan-light_blue.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        #view-source {
+            position: fixed;
+            display: block;
+            right: 0;
+            bottom: 0;
+            margin-right: 40px;
+            margin-bottom: 40px;
+            z-index: 900;
+        }
+    </style>
+</head>
+<body>
+<script>
+    let filebrowser_base = "{{ filebrowser_base }}";
+</script>
+<div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+    <header class="demo-header mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-600">
+        <div class="mdl-layout__header-row">
+            <span class="mdl-layout-title">{{ self.title() }}</span>
+            <div class="mdl-layout-spacer"></div>
+            <span id="status_chip" class="mdl-chip mdl-color--red">
+                <span class="mdl-chip__text">Disconnected</span>
+            </span>
+        </div>
+    </header>
+    <div class="demo-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
+        <header class="demo-drawer-header">
+            <h2>pibackup</h2>
+        </header>
+        <nav class="demo-navigation mdl-navigation mdl-color--blue-grey-800">
+            {{ nav_link('home', 'home', 'Home') }}
+            {{ nav_link('backup', 'backup', 'Backup') }}
+            <a class="mdl-navigation__link" href="{{ filebrowser_base }}"><i
+                    class="mdl-color-text--blue-grey-400 material-icons" role="presentation">folder</i>File Browser</a>
+        </nav>
+    </div>
+    <main class="mdl-layout__content mdl-color--grey-100">
+        {% block main %} {% endblock %}
+    </main>
+    <div id="pibackup-snackbar" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/socketio/socket.io.dev.js') }}"></script>
+<script src="{{ url_for('static', filename='js/material.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/global.js') }}"></script>
+{% block foot_js %} {% endblock %}
+</body>
+</html>

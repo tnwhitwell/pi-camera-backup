@@ -68,7 +68,8 @@ class DirManager(Mapping):
 
     def get_backups(self):
         backup_dirs = sorted(
-            [p for p in self.dest_base.iterdir() if p.match("{}*".format(self.config.backup_dir_name_prefix))])
+            [p for p in self.dest_base.iterdir() if p.match("{}*".format(self.config.backup_dir_name_prefix))],
+            key=lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', str(s))])
         data = []
         for dir in backup_dirs:  # type: pathlib.Path
             meta_file = list(dir.glob(".meta_*"))[0]
