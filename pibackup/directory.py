@@ -7,7 +7,25 @@ import json
 from collections.abc import Mapping
 from checksumdir import dirhash
 
-from pibackup import backup
+from pibackup import backup, configuration
+
+
+class Disk:
+    name = None  # type: str
+    path = None  # type: pathlib.Path
+    free = None  # type: int
+    used = None  # type: int
+    total = None  # type: int
+    is_source = False
+    is_dest = False
+
+    def __init__(self, config: configuration.ConfigManager, path: pathlib.Path):
+        self.path = path
+        self.name = path.name
+        self.free, self.used = disk_space(path)
+        self.total = self.free - self.used
+        self.is_source = (path / config.source_identifier).is_file()
+        self.is_dest = (path / config.dest_identifier).is_file()
 
 
 class DirManager(Mapping):
@@ -45,8 +63,10 @@ class DirManager(Mapping):
 
     def get_disks(self):
         base_dir = pathlib.Path(self.config.mount_basedir)
-        dir_list = [d.name for d in base_dir.glob("*")]
-        return dir_list
+        disks = []
+        for d in base_dir.glob("*"):
+            disks.append(Disk(self.config, d))
+        return disks
 
     def next_backup_dir(self):
         existing_dirs = sorted([
@@ -63,8 +83,10 @@ class DirManager(Mapping):
         return nd
 
     def dirhash(self, path: pathlib.Path):
-        return dirhash(str(path), 'sha1', excluded_files=[self.config.source_identifier, self.config.dest_identifier])
-
+        return dirhash(
+            str(path), 'sha1',
+            excluded_files=[self.config.source_identifier, self.config.dest_identifier]
+        )
 
     def get_backups(self):
         backup_dirs = sorted(
@@ -79,7 +101,6 @@ class DirManager(Mapping):
             data.append(metadata)
         return data
 
-
     def copy_files(self, source: pathlib.Path, job: backup.Job):
         job.source_hash = self.dirhash(str(source))
         copied = shutil.copytree(
@@ -87,6 +108,7 @@ class DirManager(Mapping):
             ignore=shutil.ignore_patterns())
         job.destination_hash = self.dirhash(str(job.destination))
         return copied
+
 
 def disk_space(path: pathlib.Path):
     statvfs = os.statvfs(str(path))

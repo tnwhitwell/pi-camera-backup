@@ -40,6 +40,7 @@ def backup():
     }
     return render_template('backup.html', **vars)
 
+
 @app.route('/configure')
 def configure():
     vars = {
@@ -62,14 +63,6 @@ def run_backup():
         return "No backup currently running", http.HTTPStatus.NOT_FOUND
     executor.submit(backup_manager.do_backup)
     return "Backup started", http.HTTPStatus.CREATED
-
-
-@app.route('/filebrowser')
-def redir_to_filebrowser():
-    return redirect("{}://{}:{}".format(
-        request.scheme, urlparse(request.base_url).hostname,
-        config.filebrowser_port
-    ), http.HTTPStatus.MOVED_PERMANENTLY)
 
 
 @app.route('/api/power', methods=["POST"])
@@ -107,9 +100,12 @@ def backup_list():
     data = display_manager.getBackupData()
     return jsonify(data), http.HTTPStatus.OK
 
+
 @app.route('/api/potential_disks', methods=["GET"])
 def potential_disks():
-    data = display_manager.get_potential_disks()
+    data = display_manager.get_potential_disks(
+        build_filebrowser_url(request)
+    )
     return jsonify(data), http.HTTPStatus.OK
 
 
@@ -124,6 +120,15 @@ def get_config(conf_name):
         return jsonify(data), http.HTTPStatus.OK
     except UnboundLocalError:
         return jsonify({}), http.HTTPStatus.NOT_FOUND
+
+
+def build_filebrowser_url(request):
+    return (
+        "{}://{}:{}".format(
+            request.scheme,
+            urlparse(request.base_url).hostname,
+            config.filebrowser_port
+        ))
 
 
 if __name__ == "__main__":

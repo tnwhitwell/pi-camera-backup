@@ -26,8 +26,27 @@ class DisplayManager:
         ]
         return data
 
-    def get_potential_disks(self):
-        return {"data": self.dirmanager.get_disks()}
+    def get_potential_disks(self, filebrowser_base_url):
+        disks = self.dirmanager.get_disks()  # type: [directory.Disk]
+        resp = []
+        for d in disks:
+            resp.append(
+                {
+                    "name": d.name,
+                    "fb_url": "{}/files/{}".format(
+                        filebrowser_base_url,
+                        d.name
+                    ),
+                    "free": d.free,
+                    "used": d.used,
+                    "total": d.total,
+                    "is_source": d.is_source,
+                    "is_dest": d.is_dest
+                }
+            )
+        return {
+            "data": resp
+        }
 
     def getBackupData(self):
         data = {
