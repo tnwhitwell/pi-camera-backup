@@ -46,6 +46,14 @@
     </style>
 </head>
 <body>
+<dialog class="mdl-dialog">
+    <h4 class="mdl-dialog__title">title</h4>
+    <div class="mdl-dialog__content">
+        <p>body </p>
+    </div>
+    <div class="mdl-dialog__actions">
+    </div>
+</dialog>
 <script>
     let filebrowser_base = "{{ filebrowser_base }}";
 </script>
@@ -57,6 +65,13 @@
             <span id="status_chip" class="mdl-chip mdl-color--red">
                 <span class="mdl-chip__text">Disconnected</span>
             </span>
+            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+                <i class="material-icons">more_vert</i>
+            </button>
+            <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+                <li id="header-shutdown" class="mdl-menu__item">Shutdown</li>
+                <li id="header-restart" class="mdl-menu__item">Restart</li>
+            </ul>
         </div>
     </header>
     <div class="demo-drawer mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">

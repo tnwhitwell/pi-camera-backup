@@ -1,8 +1,9 @@
 import http
 import subprocess
+import json
 
 from flask import Flask, request, redirect, render_template, jsonify
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from urllib.parse import urlparse
 
 from concurrent.futures import ThreadPoolExecutor
@@ -71,19 +72,26 @@ def redir_to_filebrowser():
     ), http.HTTPStatus.MOVED_PERMANENTLY)
 
 
-@app.route('/api/shutdown', methods=["POST"])
-def shutdown_pi():
-    shutdown = subprocess.run(
-        ["systemctl", "poweroff"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    resp = app.make_response(
-        str({
-            'stderr': shutdown.stderr,
-            'stdout': shutdown.stdout,
-            'return': shutdown.returncode
+@app.route('/api/power', methods=["POST"])
+def power_action():
+    action = request.form["action"]
+    if action not in ["poweroff", "reboot"]:
+        return jsonify(
+            {"error": "action {} not found".format(action)}
+        ), http.HTTPStatus.NOT_FOUND
+    resp = app.make_response(jsonify({"error": "{} failed".format(action)}))
+    try:
+        systemctl_action = subprocess.run(
+            ["systemctl", action], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        resp.data = jsonify({
+            "stderr": systemctl_action.stderr,
+            "stdout": systemctl_action.stdout
         })
-    )
-    resp.status_code = http.HTTPStatus.CREATED
+        resp.status_code = http.HTTPStatus.CREATED
+    except:
+        resp.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
+    else:
+        resp.status_code = http.HTTPStatus.CREATED
     resp.mimetype = 'application/json'
     return resp
 

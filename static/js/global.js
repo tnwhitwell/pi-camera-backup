@@ -34,6 +34,67 @@ $(document).ready(function () {
         )
         ;
     });
+    $("#header-shutdown").click(function (e) {
+        e.preventDefault();
+        trigger_dialog({
+            title: "Shutdown?",
+            message: "Are you sure you wish to shut down?",
+            buttons: [
+                {
+                    caption: "No",
+                    class: "close",
+                    action: function () {
+                        document.querySelector('dialog').close()
+                    }
+                },
+                {
+                    caption: "Yes",
+                    class: "accept",
+                    action: function () {
+                        $.post("/api/power", {action: "poweroff"})
+                            .done(function () {
+                                trigger_snackbar({message: "Shutdown Triggered"});
+                            })
+                            .fail(function () {
+                                trigger_snackbar({message: "Shutdown Failed"});
+                            });
+                        document.querySelector('dialog').close()
+                    }
+                }
+            ]
+        });
+    });
+
+    $("#header-restart").click(function (e) {
+        e.preventDefault();
+        trigger_dialog({
+            title: "Restart?",
+            message: "Are you sure you wish to restart?",
+            buttons: [
+                {
+                    caption: "No",
+                    class: "close",
+                    action: function () {
+                        document.querySelector('dialog').close()
+                    }
+                },
+                {
+                    caption: "Yes",
+                    class: "accept",
+                    action: function () {
+                        $.post("/api/power", {action: "reboot"})
+                            .done(function () {
+                                trigger_snackbar({message: "Restart Triggered"});
+                            })
+                            .fail(function () {
+                                trigger_snackbar({message: "Restart Failed"});
+                            });
+                        document.querySelector('dialog').close()
+                    }
+                }
+            ]
+        });
+    });
 });
 
 function socket_connected() {
@@ -58,8 +119,33 @@ function trigger_snackbar(data) {
         .showSnackbar(data)
 }
 
-if (!Array.prototype.last){
-    Array.prototype.last = function(){
+function trigger_dialog(data) { // input: data
+    // let data={
+    //     title: "some title",
+    //     message: "This is a message",
+    //     buttons: [{
+    //         caption: "No",
+    //         class: "close",
+    //         action: function () {
+    //             document.querySelector('dialog').close()
+    //         }
+    //     }]
+    // };
+    $("dialog > .mdl-dialog__title").text(data.title)
+    $("dialog > .mdl-dialog__content p").text(data.message)
+    $("dialog > .mdl-dialog__actions").empty()
+    data.buttons.forEach(function (buttondata) {
+        let button = $("<button type='button' class='mdl-button " + buttondata.class + "'></button>)");
+        button.text(buttondata.caption);
+        button.click(buttondata.action);
+        $("dialog > .mdl-dialog__actions").append(button);
+    });
+    document.querySelector('dialog').showModal();
+}
+
+if (!Array.prototype.last) {
+    Array.prototype.last = function () {
         return this[this.length - 1];
     };
-};
+}
+;
