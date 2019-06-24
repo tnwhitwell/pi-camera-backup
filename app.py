@@ -20,6 +20,32 @@ directory_manager = directory.DirManager(config)
 backup_manager = backup.BackupManager(config, directory_manager)
 display_manager = display.DisplayManager(config, directory_manager)
 
+## Helper Functions
+
+def json_error(
+        description, details="",
+        code=255, meta={}, status=http.HTTPStatus.INTERNAL_SERVER_ERROR):
+    return app.make_response((
+        jsonify({
+            "error": {
+                "description": description,
+                "details": details,
+                "code": code,
+                "meta": meta
+            }
+        }), status))
+
+
+def build_filebrowser_url(request):
+    return (
+        "{}://{}:{}".format(
+            request.scheme,
+            urlparse(request.base_url).hostname,
+            config.filebrowser_port
+        ))
+
+## Route Definitions
+
 
 @app.route('/')
 def home():
@@ -72,20 +98,29 @@ def power_action():
         return jsonify(
             {"error": "action {} not found".format(action)}
         ), http.HTTPStatus.NOT_FOUND
-    resp = app.make_response(jsonify({"error": "{} failed".format(action)}))
     try:
         systemctl_action = subprocess.run(
-            ["systemctl", action], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        resp.data = jsonify({
-            "stderr": systemctl_action.stderr,
-            "stdout": systemctl_action.stdout
-        })
-        resp.status_code = http.HTTPStatus.CREATED
-    except:
-        resp.status_code = http.HTTPStatus.INTERNAL_SERVER_ERROR
-    else:
-        resp.status_code = http.HTTPStatus.CREATED
-    resp.mimetype = 'application/json'
+            ["systemctl", action],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+            check=True)
+
+        resp = app.make_response((
+            jsonify({
+                "stderr": systemctl_action.stderr.decode("utf-8"),
+                "stdout": systemctl_action.stdout.decode("utf-8")
+            }),
+            http.HTTPStatus.CREATED))
+    except subprocess.SubprocessError as e:
+        resp = json_error(
+            description="{} failed".format(action),
+            code=e.errno,
+            status=http.HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+    except Exception as e:
+        resp = json_error(
+            description="{} failed".format(action),
+            status=http.HTTPStatus.INTERNAL_SERVER_ERROR
+        )
     return resp
 
 
@@ -108,6 +143,10 @@ def potential_disks():
     )
     return jsonify(data), http.HTTPStatus.OK
 
+@app.route('/api/configure_disks', methods=["POST"])
+def configure_disks():
+    directory_manager.set_disks(request.form)
+    return redirect("/configure", http.HTTPStatus.SEE_OTHER)
 
 @app.route('/api/config/<conf_name>', methods=["GET"])
 def get_config(conf_name):
@@ -120,15 +159,6 @@ def get_config(conf_name):
         return jsonify(data), http.HTTPStatus.OK
     except UnboundLocalError:
         return jsonify({}), http.HTTPStatus.NOT_FOUND
-
-
-def build_filebrowser_url(request):
-    return (
-        "{}://{}:{}".format(
-            request.scheme,
-            urlparse(request.base_url).hostname,
-            config.filebrowser_port
-        ))
 
 
 if __name__ == "__main__":

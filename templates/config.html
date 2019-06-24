@@ -7,18 +7,27 @@
                 <h4>Available Disks</h4>
             </div>
             <div class="mdl-layout-spacer mdl-cell mdl-cell-12-col mdl-grid"></div>
-            <div class="table-responsive">
-                <table id="available-disk-list" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
-                    <thead>
-                    <th class="mdl-data-table__cell--non-numeric">Name</th>
-                    <th class="mdl-data-table__cell--non-numeric">Used</th>
-                    <th class="mdl-data-table__cell--non-numeric">Free</th>
-                    <th class="mdl-data-table__cell--non-numeric">Source?</th>
-                    <th class="mdl-data-table__cell--non-numeric">Destination?</th>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <form id="disk_config_form" action="/api/configure_disks" method="post">
+                <div class="table-responsive">
+                    <table id="available-disk-list" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+                        <thead>
+                        <th class="mdl-data-table__cell--non-numeric">Name</th>
+                        <th class="mdl-data-table__cell--non-numeric">Disk Usage</th>
+                        <th class="mdl-data-table__cell--non-numeric"></th>
+                        <th class="mdl-data-table__cell--non-numeric">Source</th>
+                        <th class="mdl-data-table__cell--non-numeric">Destination</th>
+                        <th class="mdl-data-table__cell--non-numeric">Unused</th>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 50px;">
+                    <button type="submit"
+                            class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                        Apply
+                    </button>
+                </div>
+            </form>
             <div class="mdl-layout-spacer"></div>
         </div>
     </div>

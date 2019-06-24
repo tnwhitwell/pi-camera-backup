@@ -143,12 +143,12 @@ function trigger_dialog(data) { // input: data
     document.querySelector('dialog').showModal();
 }
 
-if (!Array.prototype.last) {
-    Array.prototype.last = function () {
-        return this[this.length - 1];
-    };
-}
-;
+// if (!Array.prototype.last) {
+//     Array.prototype.last = function () {
+//         return this[this.length - 1];
+//     };
+// }
+// ;
 
 function humanFileSize(bytes, si) {
     let thresh = si ? 1000 : 1024;

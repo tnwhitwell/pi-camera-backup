@@ -10,8 +10,8 @@ class DisplayManager:
         self.dirmanager = dirmanager
 
     def getChartData(self):
-        source = directory.disk_space(self.dirmanager.source_base)
-        dest = directory.disk_space(self.dirmanager.dest_base)
+        source = directory.disk_space(self.dirmanager.source_base)[1:]
+        dest = directory.disk_space(self.dirmanager.dest_base)[1:]
         data = [
             {
                 "name": "sourceChart",
@@ -40,6 +40,7 @@ class DisplayManager:
                     "free": d.free,
                     "used": d.used,
                     "total": d.total,
+                    "percent": round(100 * d.used / d.total, 0),
                     "is_source": d.is_source,
                     "is_dest": d.is_dest
                 }

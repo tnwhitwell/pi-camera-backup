@@ -18,14 +18,37 @@ class Disk:
     total = None  # type: int
     is_source = False
     is_dest = False
+    config = None  # type: configuration.ConfigManager
 
     def __init__(self, config: configuration.ConfigManager, path: pathlib.Path):
         self.path = path
         self.name = path.name
-        self.free, self.used = disk_space(path)
-        self.total = self.free - self.used
+        self.total, self.used, self.free = disk_space(path)
         self.is_source = (path / config.source_identifier).is_file()
         self.is_dest = (path / config.dest_identifier).is_file()
+        self.config = config
+
+    def set_destination(self, state):
+        self.is_dest = state
+        if state:
+            (self.path / self.config.dest_identifier).touch(exist_ok=True)
+            self.set_source(False)
+        else:
+            try:
+                (self.path / self.config.dest_identifier).unlink()
+            except FileNotFoundError:
+                pass
+
+    def set_source(self, state):
+        self.is_source = state
+        if state:
+            (self.path / self.config.source_identifier).touch(exist_ok=True)
+            self.set_destination(False)
+        else:
+            try:
+                (self.path / self.config.source_identifier).unlink()
+            except FileNotFoundError:
+                pass
 
 
 class DirManager(Mapping):
@@ -60,6 +83,29 @@ class DirManager(Mapping):
             return None
         else:
             return pathlib.Path(dir_list[0]).parent
+
+    def set_disks(self, raw_input):
+        input = dict(raw_input)
+
+        destinations = []
+        for d_input in input.pop("is_dest", []):
+            d_name = re.match('^(.+)-is_dest$', d_input).groups(0)[0]
+            destinations.append(Disk(self.config, pathlib.Path(self.config.mount_basedir) / d_name))
+
+        sources = []
+        for d_input in input.pop("is_source", []):
+            d_name = re.match('^(.+)-is_source$', d_input).groups(0)[0]
+            sources.append(Disk(self.config, pathlib.Path(self.config.mount_basedir) / d_name))
+
+        unuseds = [Disk(self.config, pathlib.Path(self.config.mount_basedir) / d_name) for d_name in input]
+
+        for disk in destinations:
+            disk.set_destination(True)
+        for disk in sources:
+            disk.set_source(True)
+        for disk in unuseds:
+            disk.set_destination(False)
+            disk.set_source(False)
 
     def get_disks(self):
         base_dir = pathlib.Path(self.config.mount_basedir)
@@ -114,4 +160,5 @@ def disk_space(path: pathlib.Path):
     statvfs = os.statvfs(str(path))
     total = statvfs.f_frsize * statvfs.f_blocks
     free = statvfs.f_frsize * statvfs.f_bavail
-    return [total - free, free]
+    used = total - free
+    return total, used, free
