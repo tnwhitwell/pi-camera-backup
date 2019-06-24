@@ -1,5 +1,7 @@
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 $(document).ready(function () {
+    let dialog = document.querySelector('dialog');
+    dialogPolyfill.registerDialog(dialog);
     if (socket.connected) {
         socket_connected()
     }

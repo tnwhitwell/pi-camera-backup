@@ -30,6 +30,7 @@
     -->
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/roboto.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dialog-polyfill.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='fonts/iconfont/material-icons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/material.cyan-light_blue.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
@@ -95,9 +96,10 @@
     </div>
 </div>
 <script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/socketio/socket.io.dev.js') }}"></script>
-<script src="{{ url_for('static', filename='js/material.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/socketio/socket.io.slim.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dialog-polyfill.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/global.js') }}"></script>
 {% block foot_js %} {% endblock %}
+<script src="{{ url_for('static', filename='js/material.min.js') }}"></script>
 </body>
 </html>
