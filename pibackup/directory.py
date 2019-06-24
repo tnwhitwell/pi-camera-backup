@@ -3,16 +3,18 @@ import re
 import shutil
 import os
 import json
+import uuid
+import subprocess
 
-from collections.abc import Mapping
 from checksumdir import dirhash
 
 from pibackup import backup, configuration
 
 
 class Disk:
+    id = uuid.uuid4()
     name = None  # type: str
-    path = None  # type: pathlib.Path
+    mount_point = None  # type: pathlib.Path
     free = None  # type: int
     used = None  # type: int
     total = None  # type: int
@@ -21,7 +23,7 @@ class Disk:
     config = None  # type: configuration.ConfigManager
 
     def __init__(self, config: configuration.ConfigManager, path: pathlib.Path):
-        self.path = path
+        self.mount_point = path
         self.name = path.name
         self.total, self.used, self.free = disk_space(path)
         self.is_source = (path / config.source_identifier).is_file()
@@ -31,27 +33,50 @@ class Disk:
     def set_destination(self, state):
         self.is_dest = state
         if state:
-            (self.path / self.config.dest_identifier).touch(exist_ok=True)
+            (self.mount_point / self.config.dest_identifier).touch(exist_ok=True)
             self.set_source(False)
         else:
             try:
-                (self.path / self.config.dest_identifier).unlink()
+                (self.mount_point / self.config.dest_identifier).unlink()
             except FileNotFoundError:
                 pass
 
     def set_source(self, state):
         self.is_source = state
         if state:
-            (self.path / self.config.source_identifier).touch(exist_ok=True)
+            (self.mount_point / self.config.source_identifier).touch(exist_ok=True)
             self.set_destination(False)
         else:
             try:
-                (self.path / self.config.source_identifier).unlink()
+                (self.mount_point / self.config.source_identifier).unlink()
             except FileNotFoundError:
                 pass
 
+    def unmount(self) -> (int, str, str):
+        try:
+            unmount_action = subprocess.run(
+                ["umount", repr(self.mount_point)],
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                check=True)
+            return unmount_action.returncode, unmount_action.stdout, unmount_action.stderr
+        except subprocess.CalledProcessError as e:
+            return e.returncode, e.stderr, e.stdout
+        except Exception as e:
+            return 1, "", repr(e)
 
-class DirManager(Mapping):
+
+def disk_by_name(config: configuration.ConfigManager, name):
+    return Disk(
+        config,
+        pathlib.Path(
+            "{}/{}".format(
+                config.mount_basedir,
+                name
+            )
+        ))
+
+
+class DirManager:
     source_base = None
     dest_base = None
     dest_dir = None
@@ -59,12 +84,7 @@ class DirManager(Mapping):
 
     def __init__(self, cfg):
         self.config = cfg
-        self.source_base = self.identify_mounts(self.config.source_identifier)
-        self.dest_base = self.identify_mounts(self.config.dest_identifier)
-        self._storage = {
-            "source_base": str(self.source_base),
-            "dest_base": str(self.dest_base)
-        }
+        self.update_mounts()
 
     def __getitem__(self, key):
         return self._storage[key]
@@ -74,6 +94,14 @@ class DirManager(Mapping):
 
     def __len__(self):
         return len(self._storage)
+
+    def update_mounts(self):
+        self.source_base = self.identify_mounts(self.config.source_identifier)
+        self.dest_base = self.identify_mounts(self.config.dest_identifier)
+        self._storage = {
+            "source_base": str(self.source_base),
+            "dest_base": str(self.dest_base)
+        }
 
     def identify_mounts(self, identifier: str):
         base_dir = pathlib.Path(self.config.mount_basedir)
@@ -106,6 +134,7 @@ class DirManager(Mapping):
         for disk in unuseds:
             disk.set_destination(False)
             disk.set_source(False)
+        self.update_mounts()
 
     def get_disks(self):
         base_dir = pathlib.Path(self.config.mount_basedir)

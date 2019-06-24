@@ -17,6 +17,7 @@
                         <th class="mdl-data-table__cell--non-numeric">Source</th>
                         <th class="mdl-data-table__cell--non-numeric">Destination</th>
                         <th class="mdl-data-table__cell--non-numeric">Unused</th>
+                        <th class="mdl-data-table__cell--non-numeric">Unmount</th>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -33,5 +34,5 @@
     </div>
 {% endblock %}
 {% block foot_js %}
-    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/disks.js') }}"></script>
 {% endblock %}

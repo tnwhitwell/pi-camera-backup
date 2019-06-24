@@ -20,6 +20,7 @@ directory_manager = directory.DirManager(config)
 backup_manager = backup.BackupManager(config, directory_manager)
 display_manager = display.DisplayManager(config, directory_manager)
 
+
 ## Helper Functions
 
 def json_error(
@@ -44,6 +45,7 @@ def build_filebrowser_url(request):
             config.filebrowser_port
         ))
 
+
 ## Route Definitions
 
 
@@ -67,14 +69,14 @@ def backup():
     return render_template('backup.html', **vars)
 
 
-@app.route('/configure')
-def configure():
+@app.route('/disks')
+def disks():
     vars = {
         "filebrowser_base": "{}://{}:{}".format(
             request.scheme, urlparse(request.base_url).hostname,
             config.filebrowser_port),
     }
-    return render_template('config.html', **vars)
+    return render_template('disks.html', **vars)
 
 
 @app.route('/api/backup', methods=['GET', 'POST'])
@@ -110,7 +112,7 @@ def power_action():
                 "stdout": systemctl_action.stdout.decode("utf-8")
             }),
             http.HTTPStatus.CREATED))
-    except subprocess.SubprocessError as e:
+    except subprocess.CalledProcessError as e:
         resp = json_error(
             description="{} failed".format(action),
             code=e.errno,
@@ -122,6 +124,24 @@ def power_action():
             status=http.HTTPStatus.INTERNAL_SERVER_ERROR
         )
     return resp
+
+
+@app.route('/api/unmount', methods=["POST"])
+def unmount_disk():
+    d_name = request.form["disk_name"]
+    disk = directory.disk_by_name(config, d_name)
+    print(disk)
+    status, _, _ = disk.unmount()
+    if status == 0:
+        return jsonify({
+            "data": {
+                "status": "Done"
+            }
+        }), http.HTTPStatus.CREATED
+    else:
+        return json_error(
+            "Unmount Failed"
+        )
 
 
 @app.route('/api/chartdata', methods=["GET"])
@@ -143,10 +163,12 @@ def potential_disks():
     )
     return jsonify(data), http.HTTPStatus.OK
 
+
 @app.route('/api/configure_disks', methods=["POST"])
 def configure_disks():
     directory_manager.set_disks(request.form)
     return redirect("/configure", http.HTTPStatus.SEE_OTHER)
+
 
 @app.route('/api/config/<conf_name>', methods=["GET"])
 def get_config(conf_name):

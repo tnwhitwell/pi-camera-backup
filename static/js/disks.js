@@ -47,6 +47,31 @@ function draw_disk_table() {
                     )
                 )
                 .appendTo(row);
+            $("<td class='mdl-data-table__cell--non-numeric'></td>")
+                .html(
+                    `<button id="umount-${disk.name}" class="unmount-button mdl-button mdl-js-button mdl-button--icon mdl-button--colored">
+                        <i class="material-icons">eject</i>
+                    </button>`
+                )
+                .appendTo(row)
+                .end()
+                .children()
+                .first("button")
+                .click(function (e) {
+                    e.preventDefault();
+                    let disk_name = $(this).attr("id").split("-")[1]
+                    $.post("/api/unmount", {disk_name: disk_name})
+                        .done(function () {
+                            trigger_snackbar({
+                                message: `Unmounted '${disk_name}'`,
+                            })
+                        })
+                        .fail(function () {
+                            trigger_snackbar({
+                                message: `Failed to unmount '${disk_name}'`
+                            })
+                    });
+                });
             row.appendTo(table);
         });
         $('#available-disk-list input[type="radio"]').change(function () {
