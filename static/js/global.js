@@ -22,12 +22,14 @@ $(document).ready(function () {
     });
     socket.on('backup complete', function (msg) {
         console.log(msg);
-        let dirname = msg["destination"].split('/').last();
+        let dest_split = msg["destination"].split('/')
+        let dirname = dest_split.slice(-1)[0];
+        let dest_path = dest_split.slice(-2).join("/")
         trigger_snackbar({
                 message: "Backup to " + dirname + " complete",
                 actionText: "View",
                 actionHandler: function () {
-                    window.location.href = filebrowser_base + msg["filebrowser_uri"]
+                    window.location.href = `${filebrowser_base}/files/${dest_path}`
                 },
                 timeout: 10000,
             }
