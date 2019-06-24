@@ -17,6 +17,7 @@ socketio = SocketIO(app)
 
 config = configuration.ConfigManager(socketio)
 directory_manager = directory.DirManager(config)
+disk_manager = directory.DiskManager(config)
 backup_manager = backup.BackupManager(config, directory_manager)
 display_manager = display.DisplayManager(config, directory_manager)
 

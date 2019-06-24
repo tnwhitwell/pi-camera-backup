@@ -12,23 +12,39 @@ from pibackup import backup, configuration
 
 
 class Disk:
-    id = uuid.uuid4()
+    id = None  # type: uuid.UUID
     name = None  # type: str
     mount_point = None  # type: pathlib.Path
     free = None  # type: int
     used = None  # type: int
     total = None  # type: int
+    connected = True
     is_source = False
     is_dest = False
     config = None  # type: configuration.ConfigManager
 
     def __init__(self, config: configuration.ConfigManager, path: pathlib.Path):
         self.mount_point = path
+        self.id = self.get_id()
         self.name = path.name
         self.total, self.used, self.free = disk_space(path)
         self.is_source = (path / config.source_identifier).is_file()
         self.is_dest = (path / config.dest_identifier).is_file()
         self.config = config
+
+    def write_id(self, new_id: uuid.UUID = None):
+        my_id = self.id
+        if new_id:
+            my_id = new_id
+        (self.mount_point / ".disk_id").write_text(my_id.hex)
+
+    def get_id(self):
+        try:
+            my_id = uuid.UUID((self.mount_point / ".disk_id").read_text())
+        except FileNotFoundError:
+            my_id = uuid.uuid4()
+            self.write_id(my_id)
+        return my_id
 
     def set_destination(self, state):
         self.is_dest = state
@@ -74,6 +90,30 @@ def disk_by_name(config: configuration.ConfigManager, name):
                 name
             )
         ))
+
+
+class DiskManager:
+    config = None  # type: configuration.ConfigManager
+    disks = []  # type: [Disk]
+
+    def __init__(self, config: configuration.ConfigManager):
+        self.config = config
+        self.update(False)
+
+    def update(self, push: bool):
+        disks_now = self.get_disks()
+        if len(disks_now) != len(self.disks):
+            if push:
+                self.config.socketio.emit(
+                    "Connected disks changed"
+                )
+
+    def get_disks(self):
+        base_dir = pathlib.Path(self.config.mount_basedir)
+        disks = []
+        for d in base_dir.glob("*"):
+            disks.append(Disk(self.config, d))
+        return sorted(disks)
 
 
 class DirManager:
