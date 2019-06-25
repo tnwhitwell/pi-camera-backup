@@ -1,0 +1,7 @@
+env
+.vscode
+.envrc
+.dockerignore
+.git
+Dockerfile
+**/__pycache__
